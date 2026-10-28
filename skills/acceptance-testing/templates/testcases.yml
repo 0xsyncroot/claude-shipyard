@@ -1,0 +1,61 @@
+# testcases.yml — source of truth for one test run (schema 1). Edited by test-designer only.
+# Lint: python3 -I <skill>/scripts/qa.py lint <slug> [--spec .wave/<slug>/spec.md] [--impl]
+schema: 1
+feature: "<feature title>"
+slug: <slug>
+mode: wave            # wave | standalone
+base: <BASE sha>
+surfaces: [web]       # web | admin | mobile | api
+roles: [guest, user, owner]
+viewports: [mobile, desktop]   # names from .qa/profile.yml viewports
+
+basis:                # what is tested — every item must be covered by >=1 case
+  - id: AC-1
+    kind: ac          # ac | ask | keep | impact | rule | risk
+    text: "When an owner opens a review, the page shall show its evidence photos (max 3)"
+    priority: P0
+    stage: S1
+    source: ".wave/<slug>/spec.md:42"
+  - id: K-1
+    kind: keep
+    text: "Reporting a listing without photos still works"
+    priority: P0
+    source: ".wave/<slug>/STATUS.md keep-working"
+  - id: IMP-1
+    kind: impact
+    text: "ReportDialog is also used by the chat-report flow"
+    changed: [apps/web/components/ReportDialog.tsx]
+    reaches: ["/k/[id] chat → Báo cáo"]
+    evidence: "codegraph: ReportDialog ← ChatHeader (apps/web/components/chat/ChatHeader.tsx:88)"
+    priority: P1
+  - id: R-1
+    kind: rule
+    text: "Every self-mutation writes an audit_log row (CLAUDE.md checklist)"
+    priority: P1
+    source: "CLAUDE.md"
+
+cases:
+  - id: TC-W-001
+    title: "Owner sees 3 evidence thumbnails on the review"
+    covers: [AC-1]
+    type: functional  # functional | business-rule | ui | negative | security | data | regression | a11y | compat | exploratory
+    technique: BVA    # EP | BVA | decision-table | state-transition | use-case | error-guessing | checklist | exploratory
+    priority: P0
+    surface: web
+    role: owner
+    viewports: [mobile, desktop]
+    stage: S1
+    preconditions:
+      - "Logged in as the listing owner (storageState owner)"
+      - "Seeded review with 3 evidence photos (prefix e2e-qa-)"
+    data: {listing: "seed.listing", review: "seed.review3"}
+    steps:
+      - "Open /k/{listing}"
+      - "Click \"Đánh giá\" tab"
+    expected:
+      - "ui: 3 thumbnails visible under the review, alt text \"Ảnh bằng chứng 1..3\""
+      - "net: GET /reviews/{review}/evidence → 200 with 3 items"
+      - "console: no error, no 5xx"
+    automation: tests/review-evidence.spec.ts
+    status: draft     # draft | ready | obsolete
+    changes: []

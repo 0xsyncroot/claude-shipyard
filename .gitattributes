@@ -1,0 +1,5 @@
+# Scripts must keep their line endings on every OS: bash breaks on CRLF ($'\r': command not found),
+# cmd.exe misreads LF-only batch files. Without this, Windows clones with core.autocrlf=true break bash.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

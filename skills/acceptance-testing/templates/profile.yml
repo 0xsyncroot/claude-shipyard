@@ -1,0 +1,23 @@
+# .qa/profile.yml — project test profile, written once per repo, reused by every test run.
+project: <name>
+surfaces:
+  web:   {base_url: "http://localhost:3000", health: "/", start: "<command>"}
+  # api:   {base_url: "http://localhost:3001", health: "/health", start: "<command>"}
+  # admin: {base_url: "http://localhost:3002", health: "/", start: "<command>"}
+browser: {headless: true, locale: "vi-VN", timezone: "Asia/Ho_Chi_Minh"}
+viewports:
+  mobile:  {width: 390, height: 844, isMobile: true, dpr: 3}
+  desktop: {width: 1280, height: 800}
+run:
+  workers: 1          # raise only when every test seeds its own data and no test asserts global counts
+  timeout_ms: 60000   # per test; dev servers compile on first hit
+auth:                 # how a test gets a session per role — implemented in .qa/lib/auth.ts
+  strategy: "<e.g. mint session cookie with the dev secret | UI login with seeded user>"
+  roles: {guest: "none"}
+db:
+  cmd: "<e.g. psql -h localhost -p 5432 -U postgres app -v ON_ERROR_STOP=1 -Atc>"
+  env: {}
+test_data:
+  prefix: "e2e-qa-"   # every seeded row carries it; cleanup deletes only these
+  cleanup: "<command that deletes prefixed rows>"
+never: ["production URLs", "rows without the test prefix"]
